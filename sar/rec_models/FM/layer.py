@@ -2,7 +2,7 @@ import tensorflow as tf
 import tensorflow.keras.backend as K
 from tensorflow.keras import layers, regularizers
 
-class FMLayer(layers.layer):
+class FMLayer(layers.Layer):
     def __init__(self, k, w_reg, v_reg):
         super(FMLayer, self).__init__()
         self.k = k
@@ -31,4 +31,4 @@ class FMLayer(layers.layer):
         inter_part2 = tf.matmul(tf.pow(inputs, 2), tf.pow(self.v, 2))
         inter_part = 0.5 * tf.reduce_sum(inter_part1 - inter_part2, axis=-1, keepdims=True)
         output = linear_part + inter_part
-        return tf.sigmoid(output)
+        return output

@@ -7,7 +7,7 @@ import tensorflow as tf
 from tensorflow.keras import optimizers, losses, metrics
 from sklearn.metrics import accuracy_score
 
-from model import FM
+from model import FFM
 from utils import create_criteo_dataset, printbar
 
 BATCH_SIZE = 32
@@ -47,37 +47,37 @@ if __name__ == '__main__':
     v_reg = args.v_reg
 
     file_path = '../data/train.txt'
-    (X_train, y_train), (X_test, y_test) = create_criteo_dataset(file_path, test_size=0.5)
+    feature_columns, (X_train, y_train), (X_test, y_test) = create_criteo_dataset(file_path, test_size=0.5)
     
-    model = FM(k, w_reg, v_reg)
+    model = FFM(feature_columns, k, w_reg, v_reg)
 
     '''
     train_on_batch
     '''
-    ds_train = tf.data.Dataset.from_tensor_slices((X_train, y_train)) \
-                .batch(32).prefetch(tf.data.experimental.AUTOTUNE)
-    ds_test = tf.data.Dataset.from_tensor_slices((X_test, y_test)) \
-                .batch(32).prefetch(tf.data.experimental.AUTOTUNE)
+    # ds_train = tf.data.Dataset.from_tensor_slices((X_train, y_train)) \
+    #             .batch(32).prefetch(tf.data.experimental.AUTOTUNE)
+    # ds_test = tf.data.Dataset.from_tensor_slices((X_test, y_test)) \
+    #             .batch(32).prefetch(tf.data.experimental.AUTOTUNE)
 
-    model.compile(optimizer=tf.keras.optimizers.SGD(1e-2), # tf.keras.optimizers.RMSprop(1e-3),
-                loss=tf.keras.losses.BinaryCrossentropy(),
-                metrics=[tf.keras.metrics.AUC()])
-    train_model(model, ds_train, ds_test, 100)
+    # model.compile(optimizer=tf.keras.optimizers.SGD(1e-2), # tf.keras.optimizers.RMSprop(1e-3),
+    #             loss=tf.keras.losses.BinaryCrossentropy(),
+    #             metrics=[tf.keras.metrics.AUC()])
+    # train_model(model, ds_train, ds_test, 100)
 
     '''
     tape back propagation
     '''
-    # optimizer = optimizers.SGD(0.01)
-    # summary_writer = tf.summary.create_file_writer('E:\\PycharmProjects\\tensorboard')
-    # for i in range(100):
-    #     with tf.GradientTape() as tape:
-    #         y_pre = model(X_train)
-    #         loss = tf.reduce_mean(losses.binary_crossentropy(y_true=y_train, y_pred=y_pre))
-    #         print(loss.numpy())
-    #     with summary_writer.as_default():
-    #         tf.summary.scalar("loss", loss, step=i)
-    #     grad = tape.gradient(loss, model.variables)
-    #     optimizer.apply_gradients(grads_and_vars=zip(grad, model.variables))
+    optimizer = optimizers.SGD(0.01)
+    summary_writer = tf.summary.create_file_writer('E:\\PycharmProjects\\tensorboard')
+    for i in range(100):
+        with tf.GradientTape() as tape:
+            y_pre = model(X_train)
+            loss = tf.reduce_mean(losses.binary_crossentropy(y_true=y_train, y_pred=y_pre))
+            print(loss.numpy())
+        with summary_writer.as_default():
+            tf.summary.scalar("loss", loss, step=i)
+        grad = tape.gradient(loss, model.variables)
+        optimizer.apply_gradients(grads_and_vars=zip(grad, model.variables))
     
 
     model.summary()
